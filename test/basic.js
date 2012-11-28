@@ -246,3 +246,56 @@ test("disposal function", function(t) {
   t.equal(disposed, 3)
   t.end()
 })
+
+test("disposal function on too big of item", function(t) {
+  var disposed = false
+  var cache = new LRU({
+    max: 1,
+    length: function (k) {
+      return k.length
+    },
+    dispose: function (k, n) {
+      disposed = n
+    }
+  })
+  var obj = [ 1, 2 ]
+
+  t.equal(disposed, false)
+  cache.set("obj", obj)
+  t.equal(disposed, obj)
+  t.end()
+})
+
+test("has()", function(t) {
+  var cache = new LRU({
+    max: 1,
+    maxAge: 10
+  })
+
+  cache.set('foo', 'bar')
+  t.equal(cache.has('foo'), true)
+  cache.set('blu', 'baz')
+  t.equal(cache.has('foo'), false)
+  t.equal(cache.has('blu'), true)
+  setTimeout(function() {
+    t.equal(cache.has('blu'), false)
+    t.end()
+  }, 15)
+})
+
+test("stale", function(t) {
+  var cache = new LRU({
+    maxAge: 10,
+    stale: true
+  })
+
+  cache.set('foo', 'bar')
+  t.equal(cache.get('foo'), 'bar')
+  t.equal(cache.has('foo'), true)
+  setTimeout(function() {
+    t.equal(cache.has('foo'), false)
+    t.equal(cache.get('foo'), 'bar')
+    t.equal(cache.get('foo'), undefined)
+    t.end()
+  }, 15)
+})
